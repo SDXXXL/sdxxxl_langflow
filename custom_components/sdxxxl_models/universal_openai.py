@@ -63,12 +63,27 @@ class UniversalOpenAIComponent(LCModelComponent):
         api_key = self.api_key if self.api_key else None
 
         try:
+            # Configure proxy for the request
+            proxy_handler = None
+            if self.enable_proxy == "true" and self.proxy_url:
+                formatted_proxy_url = self._format_proxy_url(self.proxy_url)
+                proxy_handler = urllib.request.ProxyHandler({
+                    'http': formatted_proxy_url,
+                    'https': formatted_proxy_url
+                })
+            
+            # Create opener with or without proxy
+            if proxy_handler:
+                opener = urllib.request.build_opener(proxy_handler)
+            else:
+                opener = urllib.request.build_opener()
+            
             req = urllib.request.Request(models_url)
             if api_key:
                 req.add_header("Authorization", f"Bearer {api_key}")
             req.add_header("Content-Type", "application/json")
 
-            with urllib.request.urlopen(req, timeout=15) as response:
+            with opener.open(req, timeout=15) as response:
                 data = json.loads(response.read().decode())
                 models = self._parse_models_from_response(data)
                 
@@ -119,6 +134,21 @@ class UniversalOpenAIComponent(LCModelComponent):
         if e.code in error_messages:
             return error_messages[e.code]
         return PLACEHOLDER_MESSAGES["http_error"].format(code=e.code, reason=e.reason)
+
+    def _format_proxy_url(self, proxy_url: str) -> str:
+        """Validate and format proxy URL. Only HTTP protocol is supported."""
+        if not proxy_url:
+            return ""
+        
+        proxy_url = proxy_url.strip()
+        
+        if not proxy_url.startswith('http://'):
+            raise ValueError(
+                f"Invalid proxy URL format: '{proxy_url}'. "
+                "Only HTTP proxies are supported. Please use format: http://127.0.0.1:7890"
+            )
+        
+        return proxy_url
 
     inputs = [
         StrInput(
@@ -191,6 +221,23 @@ class UniversalOpenAIComponent(LCModelComponent):
             value=False,
             advanced=True,
         ),
+        DropdownInput(
+            name="enable_proxy",
+            display_name="Enable Proxy",
+            options=["false", "true"],
+            value="false",
+            info="Enable proxy server for API requests",
+            advanced=False,
+            real_time_refresh=True,
+        ),
+        StrInput(
+            name="proxy_url",
+            display_name="Proxy URL (http only)",
+            info="HTTP proxy server address (e.g., http://127.0.0.1:7890)",
+            value="",
+            show=False,
+            dynamic=True,
+        ),
     ]
 
     def build_model(self) -> LanguageModel:
@@ -200,6 +247,11 @@ class UniversalOpenAIComponent(LCModelComponent):
         
         if model_name == CUSTOM_MODEL_OPTION and self.custom_model_name:
             model_name = self.custom_model_name
+
+        # Configure proxy if enabled
+        openai_proxy = None
+        if self.enable_proxy == "true" and self.proxy_url:
+            openai_proxy = self._format_proxy_url(self.proxy_url)
 
         return ChatOpenAI(
             base_url=base_url,
@@ -212,6 +264,7 @@ class UniversalOpenAIComponent(LCModelComponent):
             openai_api_base=base_url,
             timeout=60,
             max_retries=2,
+            openai_proxy=openai_proxy,
         )
 
     def _get_base_url_from_build_config(self, build_config: dotdict) -> str:
@@ -231,6 +284,24 @@ class UniversalOpenAIComponent(LCModelComponent):
     async def update_build_config(
         self, build_config: dotdict, field_value: Any, field_name: str | None = None
     ) -> dotdict:
+        # Handle proxy field updates
+        if field_name == "enable_proxy":
+            if field_value == "true":
+                build_config["proxy_url"]["show"] = True
+                build_config["proxy_url"]["info"] = "Proxy server address (e.g., http://127.0.0.1:7890, 127.0.0.1:7890, socks5://127.0.0.1:1080)"
+            else:
+                build_config["proxy_url"]["show"] = False
+                build_config["proxy_url"]["value"] = ""
+            return build_config
+        
+        # Handle proxy URL field updates (format the URL)
+        if field_name == "proxy_url" and field_value:
+            formatted_url = self._format_proxy_url(field_value)
+            if formatted_url != field_value:
+                build_config["proxy_url"]["value"] = formatted_url
+            return build_config
+        
+        # Handle model source updates
         if field_name != "model_source":
             return build_config
 

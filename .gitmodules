@@ -1,0 +1,3 @@
+[submodule "submodules/langflow"]
+	path = submodules/langflow
+	url = https://github.com/langflow-ai/langflow.git
