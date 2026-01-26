@@ -1,0 +1,81 @@
+# What is Langflow? | Langflow Documentation
+
+- Get started
+- About Langflow
+
+On this page# What is Langflow?
+
+Langflow is an open-source, Python-based, customizable framework for building AI applications.
+It supports important AI functionality like agents and the Model Context Protocol (MCP), and it doesn't require you to use specific large language models (LLMs) or vector stores.
+
+The visual editor simplifies prototyping of application workflows, enabling developers to quickly turn their ideas into powerful, real-world solutions.
+
+Try itBuild and run your first flow in minutes: Install Langflow, and then try the Quickstart.
+
+## Application development and prototyping​
+
+Langflow can help you develop a wide variety of AI applications, such as chatbots, document analysis systems, content generators, and agentic applications.
+
+Langflow includes several pre-built templates that are ready to use or customize to your needs.
+
+### Create flows in minutes​
+
+The primary purpose of Langflow is to create and serve flows, which are functional representations of application workflows.
+
+To build a flow, you connect and configure component nodes. Each component is a single step in the workflow.
+
+With Langflow's visual editor, you can drag and drop components to quickly build and test a functional AI application workflow.
+For example, you could build a chatbot flow for an e-commerce store that uses an LLM and a product data store to allow customers to ask questions about the store's products.
+
+### Test flows in real-time​
+
+You can use the Playground to test flows without having to build your entire application stack.
+You can interact with your flows and get real-time feedback about flow logic and response generation.
+
+You can also run individual components to test dependencies in isolation.
+
+### Run and serve flows​
+
+You can use your flows as prototypes for more formal application development, or you can use the Langflow API to embed your flows into your application code.
+
+For more extensive development, you can build Langflow as a dependency or deploy a Langflow server to serve flows over the public internet.
+
+For more information, see the following:
+
+- Trigger flows with the Langflow API
+- Containerize a Langflow application
+
+## Endless modifications and integrations​
+
+Langflow provides components that support many services, tools, and functionality that are required for AI applications.
+
+Some components are generalized, such as inputs, outputs, and data stores.
+Others are specialized, such as agents, language models, and embedding providers.
+
+All components offer parameters that you can set to fixed or variable values. You can also use tweaks to temporarily override flow settings at runtime.
+
+### Agent and MCP support​
+
+In addition to building agent flows with Langflow, you can leverage Langflow's built-in agent and MCP features:
+
+- Use Langflow Agents
+- Use components and flows as agent tools
+- Use Langflow as an MCP server
+- Use Langflow as an MCP client
+
+### Extensibility​
+
+In addition to the core components, Langflow supports custom components.
+
+You can use custom components developed by others, and you can develop your own custom components for personal use or to share with other Langflow users.
+
+For more information, see the following:
+
+- Contribute to Langflow
+- Create custom Python components
+- Get help and request enhancements
+
+## Next steps​
+
+- Install Langflow
+- Quickstart

@@ -1,0 +1,37 @@
+# Join the Langflow community | Langflow Documentation
+
+- Contribute
+- Join the Langflow community
+
+On this page# Join the Langflow community
+
+There are several ways you can interact with the Langflow community and learn more about the Langflow codebase.
+
+## Join the Langflow Discord server​
+
+Join the Langflow Discord Server to ask questions and showcase your projects.
+
+## Follow Langflow on X​
+
+Follow @langflow_ai on X to get the latest news about Langflow.
+
+## Star Langflow on GitHub​
+
+If you like Langflow, you can star the Langflow GitHub repository.
+Stars help other users find Langflow more easily, and quickly understand that other users have found it useful.
+
+Because Langflow is open-source, the more visible the repository is, the more likely the codebase is to attract contributors.
+
+## Watch the GitHub repository​
+
+You can watch the Langflow GitHub repository to get notified about new releases and other repository activity.
+
+To get release notifications only, select Releases only.
+
+If you select Watching, you will receive notifications about new releases as well as issues, discussions, and pull requests, if you are interested in that activity.
+For information about customizing repository notifications, see the GitHub documentation on repository subscriptions.
+
+## Request enhancements and get help through GitHub​
+
+You can also submit feature requests and get help with Langflow through the GitHub repository.
+For more information, see Get help and request enhancements.
