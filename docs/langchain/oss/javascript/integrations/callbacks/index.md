@@ -1,0 +1,21 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://docs.langchain.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Callbacks
+
+<Columns cols={3}>
+  <Card title="Datadog Tracer" icon="link" href="/oss/javascript/integrations/callbacks/datadog_tracer" arrow="true" cta="View guide" />
+
+  <Card title="Upstash Rate Limit" icon="link" href="/oss/javascript/integrations/callbacks/upstash_ratelimit_callback" arrow="true" cta="View guide" />
+</Columns>
+
+***
+
+<Callout icon="pen-to-square" iconType="regular">
+  [Edit this page on GitHub](https://github.com/langchain-ai/docs/edit/main/src/oss/javascript/integrations/callbacks/index.mdx) or [file an issue](https://github.com/langchain-ai/docs/issues/new/choose).
+</Callout>
+
+<Tip icon="terminal" iconType="regular">
+  [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+</Tip>
