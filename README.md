@@ -1,5 +1,5 @@
 # sdxxxl_langflow
-自用 Langflow 工具合集。
+自用 Langflow 工具合集，主要面向 Windows 平台。
 
 ## 快速开始
 
@@ -41,19 +41,24 @@ custom_components/
 
 ```powershell
 # 必须以管理员身份运行 PowerShell
-# 按 Win+X，选择 "Windows PowerShell (管理员)" 或 "终端 (管理员)"
-# 然后执行以下命令：
 Set-ExecutionPolicy ByPass -Scope Process -Force; & '.\fix_langflow_permission.ps1'
 ```
 
 **脚本功能**：
 - 获取 Langflow 缓存目录的所有权
-- 删除旧的 `secret_key` 文件
+- 优先尝试修复 `secret_key` 文件权限（保留文件）
+- 如果修复失败，会提示是否删除 `secret_key` 文件
 - 重置目录权限
+
+**工作流程**：
+1. **安全警告**：提示解锁后文件将可被所有用户访问
+2. **非破坏性修复**：尝试多种方法修复权限，保留 `secret_key` 文件
+3. **破坏性备份**：如果修复失败，询问是否删除 `secret_key`（将丢失所有全局变量中的密钥）
 
 **注意事项**：
 - 必须以管理员身份运行
-- 如果 `secret_key` 文件已被删除，脚本会显示相应提示
+- 脚本会提示数据安全风险，需确认后继续
+- 如果 `secret_key` 文件不存在，脚本会显示相应提示
 - 修复完成后，使用 `langflow run` 启动 Langflow
 
 ## 自定义组件
