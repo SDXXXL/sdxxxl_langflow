@@ -50,15 +50,15 @@ try {
     $username = [System.Environment]::GetEnvironmentVariable("USERNAME")
 
     # Use icacls to grant full control permissions
-    $commands = @(
-        "/grant:r ${username}:(OI)(CI)F",
-        "/grant:r Everyone:(OI)(CI)F",
-        "/grant:r BUILTIN\Administrators:(OI)(CI)F",
-        "/grant:r SYSTEM:(OI)(CI)F"
+    $permissions = @(
+        "${username}:(OI)(CI)F",
+        "Everyone:(OI)(CI)F",
+        "BUILTIN\Administrators:(OI)(CI)F",
+        "SYSTEM:(OI)(CI)F"
     )
 
-    foreach ($cmd in $commands) {
-        icacls $langflowCachePath $cmd 2>&1 | Out-Null
+    foreach ($perm in $permissions) {
+        cmd /c "icacls `"$langflowCachePath`" /grant:r `"$perm`"" 2>&1 | Out-Null
     }
 
     Write-Success "Permission fix completed!"
