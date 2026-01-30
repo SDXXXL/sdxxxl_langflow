@@ -6,15 +6,52 @@ $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $configFile = Join-Path $scriptDir "config.ini"
 
-$condaScript = Join-Path $scriptDir "init_conda.ps1"
-if (Test-Path $condaScript) {
-    . $condaScript
-    if (-not $script:condaInitialized) {
-        Write-Host "[WARN] Failed to initialize conda environment. Continuing anyway..." -ForegroundColor Yellow
-    }
-} else {
-    Write-Host "[WARN] init_conda.ps1 not found, skipping conda initialization" -ForegroundColor Yellow
+# Initialize conda environment directly in the main script
+# This ensures the activation persists in the current PowerShell context
+Write-Host "[LOAD] Initializing conda environment..." -ForegroundColor Yellow
+
+# Load config for conda path
+$config = @{
+    CONDA_ENV = "lang-env"
+    CONDA_PATH = "$env:USERPROFILE\anaconda3"
 }
+
+if (Test-Path $configFile) {
+    Get-Content $configFile | Where-Object { $_ -match '^\w+=' } | ForEach-Object {
+        $parts = $_ -split '=', 2
+        if ($parts.Count -eq 2) {
+            $key = $parts[0].Trim()
+            $value = $parts[1].Trim()
+            if ($config.ContainsKey($key)) {
+                $config[$key] = $value
+            }
+        }
+    }
+}
+
+# Set conda environment variables
+$condaPath = $config.CONDA_PATH.Replace('\', '/').Replace('C:/', 'C:\')
+$env:CONDA_EXE = "$condaPath\Scripts\conda.exe"
+$env:_CONDA_EXE = "$condaPath\Scripts\conda.exe"
+$env:_CE_M = $null
+$env:_CE_CONDA = $null
+$env:CONDA_PYTHON_EXE = "$condaPath\python.exe"
+$env:_CONDA_ROOT = $condaPath
+
+# Import conda module
+$condaModulePath = "$condaPath\shell\condabin\Conda.psm1"
+if (Test-Path $condaModulePath) {
+    $CondaModuleArgs = @{ChangePs1 = $True}
+    Import-Module $condaModulePath -ArgumentList $CondaModuleArgs
+    Remove-Variable CondaModuleArgs
+    Write-Host "[OK] Conda module imported" -ForegroundColor Green
+} else {
+    Write-Host "[WARN] Conda module not found at: $condaModulePath" -ForegroundColor Yellow
+}
+
+# Activate conda environment
+conda activate $config.CONDA_ENV
+Write-Host "[OK] Conda environment '$($config.CONDA_ENV)' activated" -ForegroundColor Green
 
 $defaultCustomComponentsPath = Join-Path $scriptDir "custom_components"
 $customComponentsPath = $defaultCustomComponentsPath

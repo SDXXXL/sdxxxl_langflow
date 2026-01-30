@@ -51,15 +51,31 @@ $env:all_proxy = $config.PROXY_SOCKS
 
 # Initialize conda environment
 Write-Host "`n[*] Initializing conda environment..." -ForegroundColor Yellow
-$condaScript = Join-Path $scriptDir "init_conda.ps1"
-if (Test-Path $condaScript) {
-    . $condaScript -EnvName $config.CONDA_ENV
-    if (-not $script:condaInitialized) {
-        Write-Host "[!] Warning: Failed to initialize conda environment" -ForegroundColor Yellow
-    }
+
+# Set conda environment variables directly in the main script
+# This ensures the activation persists in the current PowerShell context
+$condaPath = $config.CONDA_PATH.Replace('\', '/').Replace('C:/', 'C:\')
+$env:CONDA_EXE = "$condaPath\Scripts\conda.exe"
+$env:_CONDA_EXE = "$condaPath\Scripts\conda.exe"
+$env:_CE_M = $null
+$env:_CE_CONDA = $null
+$env:CONDA_PYTHON_EXE = "$condaPath\python.exe"
+$env:_CONDA_ROOT = $condaPath
+
+# Import conda module
+$condaModulePath = "$condaPath\shell\condabin\Conda.psm1"
+if (Test-Path $condaModulePath) {
+    $CondaModuleArgs = @{ChangePs1 = $True}
+    Import-Module $condaModulePath -ArgumentList $CondaModuleArgs
+    Remove-Variable CondaModuleArgs
+    Write-Host "[*] Conda module imported successfully" -ForegroundColor Yellow
 } else {
-    Write-Host "[!] Warning: init_conda.ps1 not found, skipping conda initialization" -ForegroundColor Yellow
+    Write-Host "[!] Warning: Conda module not found at: $condaModulePath" -ForegroundColor Yellow
 }
+
+# Activate conda environment
+conda activate $config.CONDA_ENV
+Write-Host "[*] Conda environment '$($config.CONDA_ENV)' activated" -ForegroundColor Yellow
 
 # Verify activation
 Write-Host "[*] Verifying Python environment..." -ForegroundColor Yellow
@@ -77,4 +93,5 @@ Write-Host "" -ForegroundColor Gray
 
 # Change to script directory and run langflow
 Set-Location $scriptDir
+
 langflow run --host $config.LANGFLOW_HOST --port $config.LANGFLOW_PORT
