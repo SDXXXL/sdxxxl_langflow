@@ -2,13 +2,13 @@ import json
 import urllib.request
 import urllib.error
 from typing import Any, List
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 from lfx.base.models.model import LCModelComponent
-from lfx.field_typing import LanguageModel
+from lfx.field_typing import Embeddings, LanguageModel
 from lfx.schema.dotdict import dotdict
-from lfx.inputs.inputs import MessageInput, StrInput, BoolInput
-from lfx.io import DropdownInput, MultilineInput, SecretStrInput, SliderInput
+from lfx.inputs.inputs import MessageInput, StrInput, BoolInput, IntInput
+from lfx.io import DropdownInput, MultilineInput, SecretStrInput, SliderInput, Output
 from lfx.field_typing.range_spec import RangeSpec
 
 
@@ -31,6 +31,11 @@ MODEL_SOURCES = [
     "default",
     "auto-fetch",
     "custom"
+]
+
+OUTPUT_TYPES = [
+    "llm",
+    "embeddings"
 ]
 
 PLACEHOLDER_MESSAGES = {
@@ -165,6 +170,14 @@ class UniversalOpenAIComponent(LCModelComponent):
             required=False,
         ),
         DropdownInput(
+            name="output_type",
+            display_name="Output Type",
+            options=OUTPUT_TYPES,
+            value="llm",
+            info="Select the output type: LLM for text generation or Embeddings for vector embeddings",
+            real_time_refresh=True,
+        ),
+        DropdownInput(
             name="model_source",
             display_name="Model Source",
             options=MODEL_SOURCES,
@@ -191,12 +204,14 @@ class UniversalOpenAIComponent(LCModelComponent):
             name="input_value",
             display_name="Input",
             info="Input text to send to the model",
+            show=True,
         ),
         MultilineInput(
             name="system_message",
             display_name="System Message",
             info="System prompt to set model behavior",
             advanced=False,
+            show=True,
         ),
         SliderInput(
             name="temperature",
@@ -205,6 +220,7 @@ class UniversalOpenAIComponent(LCModelComponent):
             info="Controls randomness of output, higher values make output more random (0-2)",
             range_spec=RangeSpec(min=0, max=2, step=0.01),
             advanced=True,
+            show=True,
         ),
         SliderInput(
             name="max_tokens",
@@ -213,6 +229,7 @@ class UniversalOpenAIComponent(LCModelComponent):
             info="Maximum number of tokens to generate",
             range_spec=RangeSpec(min=1, max=32768, step=1),
             advanced=True,
+            show=True,
         ),
         BoolInput(
             name="stream",
@@ -220,6 +237,23 @@ class UniversalOpenAIComponent(LCModelComponent):
             info="Enable streaming response",
             value=False,
             advanced=True,
+            show=True,
+        ),
+        IntInput(
+            name="dimensions",
+            display_name="Embedding Dimensions",
+            value=1536,
+            info="The number of dimensions the resulting output embeddings should have. Only supported by certain models.",
+            advanced=True,
+            show=False,
+        ),
+        IntInput(
+            name="chunk_size",
+            display_name="Chunk Size",
+            value=1000,
+            info="The chunk size to use when processing documents for embeddings.",
+            advanced=True,
+            show=False,
         ),
         DropdownInput(
             name="enable_proxy",
@@ -238,6 +272,12 @@ class UniversalOpenAIComponent(LCModelComponent):
             show=False,
             dynamic=True,
         ),
+    ]
+
+    outputs = [
+        Output(display_name="Model Response", name="text_output", method="text_response"),
+        Output(display_name="Language Model", name="model_output", method="build_model"),
+        Output(display_name="Embedding Model", name="embeddings", method="build_embeddings"),
     ]
 
     def build_model(self) -> LanguageModel:
@@ -267,6 +307,27 @@ class UniversalOpenAIComponent(LCModelComponent):
             openai_proxy=openai_proxy,
         )
 
+    def build_embeddings(self) -> Embeddings:
+        base_url = self.base_url.rstrip("/")
+        model_name = self.model_name
+        api_key = self.api_key if self.api_key else None
+
+        if model_name == CUSTOM_MODEL_OPTION and self.custom_model_name:
+            model_name = self.custom_model_name
+
+        openai_proxy = None
+        if self.enable_proxy == "true" and self.proxy_url:
+            openai_proxy = self._format_proxy_url(self.proxy_url)
+
+        return OpenAIEmbeddings(
+            model=model_name,
+            base_url=base_url,
+            api_key=api_key,
+            dimensions=self.dimensions or None,
+            chunk_size=self.chunk_size,
+            openai_proxy=openai_proxy,
+        )
+
     def _get_base_url_from_build_config(self, build_config: dotdict) -> str:
         base_url_field = build_config.get("base_url", {})
         if isinstance(base_url_field, dict):
@@ -284,6 +345,26 @@ class UniversalOpenAIComponent(LCModelComponent):
     async def update_build_config(
         self, build_config: dotdict, field_value: Any, field_name: str | None = None
     ) -> dotdict:
+        # Handle output type changes
+        if field_name == "output_type":
+            if field_value == "embeddings":
+                build_config["input_value"]["show"] = False
+                build_config["system_message"]["show"] = False
+                build_config["temperature"]["show"] = False
+                build_config["max_tokens"]["show"] = False
+                build_config["stream"]["show"] = False
+                build_config["dimensions"]["show"] = True
+                build_config["chunk_size"]["show"] = True
+            else:
+                build_config["input_value"]["show"] = True
+                build_config["system_message"]["show"] = True
+                build_config["temperature"]["show"] = True
+                build_config["max_tokens"]["show"] = True
+                build_config["stream"]["show"] = True
+                build_config["dimensions"]["show"] = False
+                build_config["chunk_size"]["show"] = False
+            return build_config
+
         # Handle proxy field updates
         if field_name == "enable_proxy":
             if field_value == "true":
