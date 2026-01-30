@@ -3,8 +3,41 @@
 
 $ErrorActionPreference = "Stop"
 
-$customComponentsPath = "c:\Codes\LANG\sdxxxl_langflow\custom_components"
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$configFile = Join-Path $scriptDir "config.ini"
+
+$condaScript = Join-Path $scriptDir "init_conda.ps1"
+if (Test-Path $condaScript) {
+    . $condaScript
+    if (-not $script:condaInitialized) {
+        Write-Host "[WARN] Failed to initialize conda environment. Continuing anyway..." -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "[WARN] init_conda.ps1 not found, skipping conda initialization" -ForegroundColor Yellow
+}
+
+$defaultCustomComponentsPath = Join-Path $scriptDir "custom_components"
+$customComponentsPath = $defaultCustomComponentsPath
 $envVarName = "LANGFLOW_COMPONENTS_PATH"
+
+if (Test-Path $configFile) {
+    Write-Host "[LOAD] Loading configuration from config.ini..." -ForegroundColor Yellow
+    Get-Content $configFile | Where-Object { $_ -match '^\w+=' } | ForEach-Object {
+        $parts = $_ -split '=', 2
+        if ($parts.Count -eq 2) {
+            $key = $parts[0].Trim()
+            $value = $parts[1].Trim()
+            if ($key -eq "CUSTOM_COMPONENTS_PATH" -and $value) {
+                $customComponentsPath = $value
+            }
+        }
+    }
+    Write-Host "[LOAD] Configuration loaded successfully" -ForegroundColor Yellow
+}
+
+if ($customComponentsPath -ne $defaultCustomComponentsPath) {
+    Write-Host "[LOAD] Using custom path from config.ini: $customComponentsPath" -ForegroundColor Cyan
+}
 
 function Write-Status {
     param([string]$Message)

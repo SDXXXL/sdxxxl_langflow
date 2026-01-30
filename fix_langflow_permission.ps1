@@ -1,6 +1,27 @@
 $ErrorActionPreference = "Stop"
 
-$langflowCachePath = "C:\Users\$env:USERNAME\AppData\Local\langflow\langflow\Cache"
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$configFile = Join-Path $scriptDir "config.ini"
+
+$config = @{
+    LANGFLOW_CACHE_PATH = "C:/Users/$env:USERNAME/AppData/Local/langflow/langflow/Cache"
+}
+
+if (Test-Path $configFile) {
+    Write-Host "[FIX] Loading configuration from config.ini..." -ForegroundColor Yellow
+    Get-Content $configFile | Where-Object { $_ -match '^\w+=' } | ForEach-Object {
+        $parts = $_ -split '=', 2
+        if ($parts.Count -eq 2) {
+            $config[$parts[0].Trim()] = $parts[1].Trim()
+        }
+    }
+    Write-Host "[FIX] Configuration loaded successfully" -ForegroundColor Yellow
+} else {
+    Write-Host "[FIX] config.ini not found, using default settings" -ForegroundColor Yellow
+}
+
+$langflowCachePath = [System.Environment]::ExpandEnvironmentVariables($config.LANGFLOW_CACHE_PATH)
+$langflowCachePath = $langflowCachePath.Replace('/', '\')
 $secretKeyPath = Join-Path $langflowCachePath "secret_key"
 
 function Write-Status {

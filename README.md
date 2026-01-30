@@ -1,22 +1,43 @@
 # sdxxxl_langflow
+
 自用 Langflow/LangChain 工具合集，主要面向 Windows 平台。
 
+## 目录
+
+- [快速开始](#快速开始)
+- [自定义组件](#自定义组件)
+- [官方离线文档](#官方离线文档)
+
 ## 快速开始
+
+### 环境准备
+
+#### PowerShell 执行策略
+
+首次使用前，需要设置 PowerShell 脚本执行策略：
+
+```powershell
+# 永久设置（推荐）
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+或执行脚本时添加参数：
+
+```powershell
+powershell -ExecutionPolicy ByPass -File ".\auto_load_nodes.ps1"
+```
 
 ### 自动装载节点
 
 运行脚本自动将自定义组件同步到 Langflow：
 
 ```powershell
-# 在 conda 环境下执行
-conda activate <your_env_name>
 .\auto_load_nodes.ps1
 ```
 
 **首次运行**：脚本会设置 `LANGFLOW_COMPONENTS_PATH` 用户环境变量，指向项目目录下的 `custom_components`。
 
-**环境变量已设置的情况**：
-- 如果 `LANGFLOW_COMPONENTS_PATH` 已指向其他目录，脚本会将 `custom_components` 下的所有分类复制到该目录
+**环境变量已设置的情况**：如果 `LANGFLOW_COMPONENTS_PATH` 已指向其他目录，脚本会将 `custom_components` 下的所有分类复制到该目录。
 
 > **注意**：设置环境变量后，请重启终端或重新登录使配置生效。
 
@@ -32,7 +53,7 @@ custom_components/
 └── 分类名称N/
 ```
 
-添加新分类时，只需在 `custom_components` 下创建新目录，脚本会自动处理。
+添加新分类时，只需在 `custom_components` 下创建新目录，并更新对应的 __init__.py，脚本会一并复制/处理。
 
 ### 修复 Langflow 权限问题
 
@@ -40,7 +61,7 @@ custom_components/
 
 ```powershell
 # 必须以管理员身份运行 PowerShell
-Set-ExecutionPolicy ByPass -Scope Process -Force; & '.\fix_langflow_permission.ps1'
+.\fix_langflow_permission.ps1
 ```
 
 **脚本功能**：
@@ -59,6 +80,34 @@ Set-ExecutionPolicy ByPass -Scope Process -Force; & '.\fix_langflow_permission.p
 - 脚本会提示数据安全风险，需确认后继续
 - 如果 `secret_key` 文件不存在，脚本会显示相应提示
 - 修复完成后，使用 `langflow run` 启动 Langflow
+
+### 代理环境启动
+
+如果需要通过代理服务器运行 Langflow，可以使用项目提供的启动脚本：
+
+**启动脚本**：
+- `start_langflow_proxy.ps1` - PowerShell 版本（推荐）
+- `start_langflow_proxy.bat` - Batch 版本
+
+**使用方法**：
+
+**PowerShell（推荐）**：
+
+```powershell
+.\start_langflow_proxy.ps1
+```
+
+**Batch**：
+
+直接双击 `start_langflow_proxy.bat` 或在 CMD 中运行：
+
+```cmd
+start_langflow_proxy.bat
+```
+
+**注意事项**：
+- 使用全局代理时，无需在组件中单独启用代理选项
+- 请确认使用的代理不会代理本地请求，否则会导致本地服务无法访问
 
 ## 自定义组件
 
@@ -81,7 +130,6 @@ Set-ExecutionPolicy ByPass -Scope Process -Force; & '.\fix_langflow_permission.p
 ```
 # 代理 URL 格式（必须以 http:// 开头）
 http://127.0.0.1:7890
-http://127.0.0.1:7899
 ```
 
 ## 官方离线文档
@@ -93,7 +141,6 @@ http://127.0.0.1:7899
 **文档位置**：`docs/langflow/`
 
 包含 **22 个页面**，涵盖：
-
 - **入门指南**：安装、快速开始
 - **核心概念**：组件、Flow、Playground、发布
 - **开发指南**：应用开发、自定义组件
@@ -107,24 +154,26 @@ http://127.0.0.1:7899
 包含 **678 个页面**，涵盖：
 
 #### API 参考
-- `docs/langchain/api-reference/` - Auth Service、Deployments、Integrations、Listeners、Sandboxes 等 API
+
+`docs/langchain/api-reference/` - Auth Service、Deployments、Integrations、Listeners、Sandboxes 等 API
 
 #### LangSmith 平台
-- `docs/langchain/langsmith/` - 完整的 LangSmith 平台文档
-  - **Agent Builder**：无代码 agent 创建、模板、工具、远程 MCP 服务器
-  - **Agent Server**：分布式追踪、扩缩容、Webhooks
-  - **Evaluation**：评估方法、数据集、实验对比
-  - **Deployments**：自部署（AWS、Azure、GCP）、混合部署、云部署
-  - **Observability**：追踪、日志、监控
-  - **Authentication**：多种认证方式、API 密钥、自定义认证
+
+`docs/langchain/langsmith/` - 完整的 LangSmith 平台文档：
+- **Agent Builder**：无代码 agent 创建、模板、工具、远程 MCP 服务器
+- **Agent Server**：分布式追踪、扩缩容、Webhooks
+- **Evaluation**：评估方法、数据集、实验对比
+- **Deployments**：自部署（AWS、Azure、GCP）、混合部署、云部署
+- **Observability**：追踪、日志、监控
+- **Authentication**：多种认证方式、API 密钥、自定义认证
 
 #### 开源框架
-- LangChain、LangGraph、Deep Agents 的完整文档
+
+LangChain、LangGraph、Deep Agents 的完整文档
 
 ### 搜索索引
 
 项目提供了搜索索引文件：
-
 - `docs/langflow/search_index.json` - 22 个 Langflow 页面的索引
 - `docs/langchain/search_index.json` - 678 个 LangChain 页面的索引
 
@@ -139,4 +188,4 @@ python download_langchain_docs.py
 python download_langflow_docs.py
 ```
 
-**注意**：Langchain 文档基于官方 `llms.txt` 索引下载。请在非高峰期运行脚本，或等待本项目更新，避免对官方服务器造成压力。
+**注意**：请在非高峰期运行脚本，或等待本项目更新，避免对官方服务器造成压力。
