@@ -38,6 +38,11 @@ OUTPUT_TYPES = [
     "embeddings"
 ]
 
+OUTPUT_MODES = [
+    "response",
+    "model"
+]
+
 PLACEHOLDER_MESSAGES = {
     "missing_base_url": "Please enter API Base URL first",
     "missing_api_key": "API Key required for this endpoint",
@@ -175,6 +180,14 @@ class UniversalOpenAIComponent(LCModelComponent):
             options=OUTPUT_TYPES,
             value="llm",
             info="Select the output type: LLM for text generation or Embeddings for vector embeddings",
+            real_time_refresh=True,
+        ),
+        DropdownInput(
+            name="output_mode",
+            display_name="Output Mode",
+            options=OUTPUT_MODES,
+            value="response",
+            info="response: returns model response text; model: returns language model object for chaining",
             real_time_refresh=True,
         ),
         DropdownInput(
@@ -355,6 +368,7 @@ class UniversalOpenAIComponent(LCModelComponent):
                 build_config["stream"]["show"] = False
                 build_config["dimensions"]["show"] = True
                 build_config["chunk_size"]["show"] = True
+                build_config["output_mode"]["show"] = False
             else:
                 build_config["input_value"]["show"] = True
                 build_config["system_message"]["show"] = True
@@ -363,6 +377,18 @@ class UniversalOpenAIComponent(LCModelComponent):
                 build_config["stream"]["show"] = True
                 build_config["dimensions"]["show"] = False
                 build_config["chunk_size"]["show"] = False
+                build_config["output_mode"]["show"] = True
+                build_config["output_mode"]["value"] = "response"
+            return build_config
+
+        # Handle output mode changes
+        if field_name == "output_mode":
+            if field_value == "model":
+                build_config["input_value"]["show"] = False
+                build_config["system_message"]["show"] = False
+            else:
+                build_config["input_value"]["show"] = True
+                build_config["system_message"]["show"] = True
             return build_config
 
         # Handle proxy field updates
@@ -449,6 +475,41 @@ class UniversalOpenAIComponent(LCModelComponent):
             build_config["custom_model_name"]["info"] = PLACEHOLDER_MESSAGES["fetch_failed"]
 
         return build_config
+
+    def update_outputs(self, frontend_node: dict, field_name: str, field_value: Any) -> dict:
+        """Dynamically update output ports based on output_mode selection."""
+        if field_name in {"output_mode", "output_type"}:
+            output_mode = getattr(self, "output_mode", "response")
+            output_type = field_value if field_name == "output_type" else getattr(self, "output_type", "llm")
+
+            frontend_node["outputs"] = []
+
+            if output_type == "embeddings":
+                frontend_node["outputs"].append(
+                    Output(
+                        display_name="Embedding Model",
+                        name="embeddings",
+                        method="build_embeddings",
+                    )
+                )
+            else:
+                if output_mode == "response":
+                    frontend_node["outputs"].append(
+                        Output(
+                            display_name="Model Response",
+                            name="text_output",
+                            method="text_response",
+                        )
+                    )
+                frontend_node["outputs"].append(
+                    Output(
+                        display_name="Language Model",
+                        name="model_output",
+                        method="build_model",
+                    )
+                )
+
+        return frontend_node
 
     def validate_configuration(self) -> List[str]:
         errors = []

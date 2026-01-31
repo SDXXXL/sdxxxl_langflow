@@ -108,6 +108,8 @@ start_langflow_proxy.bat
 **注意事项**：
 - 使用全局代理时，无需在组件中单独启用代理选项
 - 请确认使用的代理不会代理本地请求，否则会导致本地服务无法访问
+- 脚本会自动从 `config.ini` 读取 `NO_PROXY` 设置，绕过代理访问本地服务
+- 默认为 `127.0.0.1,localhost,::1`，可在 `config.ini` 中自定义修改
 
 ## 自定义组件
 
@@ -131,6 +133,22 @@ start_langflow_proxy.bat
 # 代理 URL 格式（必须以 http:// 开头）
 http://127.0.0.1:7890
 ```
+
+### UniversalAgent
+
+通用 Agent 组件，配合 UniversalOpenAI 使用，支持任意 OpenAI 兼容的 API。
+
+**主要特性**：
+- 通过 `llm` 输入接收外部 LanguageModel
+- 保留完整 Agent 功能（tools、memory、structured output）
+- 与 UniversalOpenAI 无缝配合使用
+
+**连接说明**：
+- 从 `UniversalOpenAI Compatible Model` 的 `model_output` 连接到 `Universal Agent` 的 `llm` 输入
+- 连接后即可使用本地部署或第三方 OpenAI 兼容 API 的模型作为 Agent
+
+**注意事项**：
+- 请使用支持相关特性的模型，例如使用工具调用请选择支持 function calling 的模型
 
 ## 官方离线文档
 

@@ -49,6 +49,19 @@ $env:http_proxy = $config.PROXY_HTTP
 $env:https_proxy = $config.PROXY_HTTPS
 $env:all_proxy = $config.PROXY_SOCKS
 
+# Set no-proxy addresses to bypass proxy for local services
+$noProxy = $config.NO_PROXY
+if ($noProxy) {
+    $env:NO_PROXY = $noProxy
+    $env:no_proxy = $noProxy
+    Write-Host "[*] No proxy settings applied: $noProxy" -ForegroundColor Yellow
+} else {
+    $defaultNoProxy = "127.0.0.1,localhost,::1"
+    $env:NO_PROXY = $defaultNoProxy
+    $env:no_proxy = $defaultNoProxy
+    Write-Host "[*] Using default no proxy settings: $defaultNoProxy" -ForegroundColor Yellow
+}
+
 # Initialize conda environment
 Write-Host "`n[*] Initializing conda environment..." -ForegroundColor Yellow
 
